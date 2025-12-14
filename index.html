@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Resume</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Your Name</h1>
+            <p class="title">Your Professional Title</p>
+            <div class="contact-info">
+                <a href="mailto:your.email@example.com">your.email@example.com</a> |
+                <a href="https://github.com/Almujalled" target="_blank">GitHub</a> |
+                <a href="https://linkedin.com/in/yourprofile" target="_blank">LinkedIn</a>
+            </div>
+        </header>
+
+        <section class="summary">
+            <h2>Professional Summary</h2>
+            <p>
+                Brief professional summary highlighting your key skills, experience, and career objectives.
+                Replace this text with your own professional summary.
+            </p>
+        </section>
+
+        <section class="experience">
+            <h2>Work Experience</h2>
+            
+            <div class="job">
+                <h3>Job Title</h3>
+                <p class="company">Company Name | Location</p>
+                <p class="date">Month Year - Present</p>
+                <ul>
+                    <li>Key achievement or responsibility</li>
+                    <li>Another important contribution</li>
+                    <li>Measurable result or impact</li>
+                </ul>
+            </div>
+
+            <div class="job">
+                <h3>Previous Job Title</h3>
+                <p class="company">Previous Company | Location</p>
+                <p class="date">Month Year - Month Year</p>
+                <ul>
+                    <li>Key achievement or responsibility</li>
+                    <li>Another important contribution</li>
+                    <li>Measurable result or impact</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="education">
+            <h2>Education</h2>
+            
+            <div class="degree">
+                <h3>Degree Name</h3>
+                <p class="school">University Name | Location</p>
+                <p class="date">Graduation Year</p>
+                <p>Major: Your Major | GPA: X.XX (optional)</p>
+            </div>
+        </section>
+
+        <section class="skills">
+            <h2>Skills</h2>
+            <div class="skills-grid">
+                <div class="skill-category">
+                    <h3>Programming Languages</h3>
+                    <p>JavaScript, Python, Java, C++</p>
+                </div>
+                <div class="skill-category">
+                    <h3>Frameworks & Tools</h3>
+                    <p>React, Node.js, Git, Docker</p>
+                </div>
+                <div class="skill-category">
+                    <h3>Other Skills</h3>
+                    <p>Agile, Problem Solving, Team Collaboration</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="projects">
+            <h2>Projects</h2>
+            
+            <div class="project">
+                <h3>Project Name</h3>
+                <p class="project-tech">Technologies: List technologies used</p>
+                <ul>
+                    <li>Brief description of what the project does</li>
+                    <li>Key features or achievements</li>
+                    <li><a href="https://github.com/Almujalled/project" target="_blank">View on GitHub</a></li>
+                </ul>
+            </div>
+        </section>
+
+        <footer>
+            <p>&copy; <span id="year"></span> Your Name. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>
