@@ -756,7 +756,7 @@
                     getComputedStyle(document.documentElement)
                         .getPropertyValue('--accent-color')
                         .trim() ||
-                    '#3ddc84'
+                    '#2fbf39'  // Fallback to light theme accent green
                 );
             }
 
@@ -841,7 +841,14 @@
                 });
             };
 
-            window.initParticles();
+            // Wait for CSS to be fully loaded and parsed before initializing particles
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    setTimeout(window.initParticles, 100);
+                });
+            } else {
+                setTimeout(window.initParticles, 100);
+            }
         })();
     </script>
 </body>
