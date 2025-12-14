@@ -53,6 +53,9 @@ source-cv/
 latex-src/
 latex-src-no/
 
+# Local automation scripts
+publish.sh
+
 # Analysis and research documents (internal use only)
 *enrichment*.md
 *analysis*.md
