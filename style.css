@@ -272,7 +272,7 @@ footer {
         text-decoration: none;
     }
 
-    .contact-info a::after {
+    a[href^="http"]::after {
         content: " (" attr(href) ")";
         font-size: 0.8em;
     }
