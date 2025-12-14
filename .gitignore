@@ -47,3 +47,16 @@ yarn.lock
 # Backup files
 *.bak
 *.backup
+
+# Source CV files (LaTeX, templates, etc.)
+source-cv/
+
+# Analysis and research documents (internal use only)
+*enrichment*.md
+*analysis*.md
+*recovery*.md
+CONTENT_*.md
+
+# Cover letter (local use only, customize per application)
+cover_letter.html
+QUICK_*.md

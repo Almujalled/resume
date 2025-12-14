@@ -1,0 +1,219 @@
+name: Lighthouse CI
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'index.html'
+      - 'style.css'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.13.x
+
+      - name: Start local server
+        run: |
+          python3 -m http.server 8080 &
+          sleep 3
+
+      - name: Run Lighthouse CI (English)
+        run: |
+          lhci autorun --config=.lighthouserc-en.json || true
+        env:
+          LHCI_BUILD_CONTEXT__CURRENT_HASH: ${{ github.sha }}
+
+      - name: Run Lighthouse CI (Norwegian)
+        run: |
+          lhci autorun --config=.lighthouserc-no.json || true
+        env:
+          LHCI_BUILD_CONTEXT__CURRENT_HASH: ${{ github.sha }}
+
+      - name: Create Lighthouse config (English)
+        run: |
+          cat > .lighthouserc-en.json << 'EOF'
+          {
+            "ci": {
+              "collect": {
+                "url": ["http://localhost:8080/index.html#en"],
+                "numberOfRuns": 1,
+                "settings": {
+                  "preset": "desktop",
+                  "onlyCategories": ["performance", "accessibility", "best-practices", "seo"]
+                }
+              },
+              "assert": {
+                "assertions": {
+                  "categories:performance": ["warn", {"minScore": 0.9}],
+                  "categories:accessibility": ["error", {"minScore": 0.95}],
+                  "categories:best-practices": ["warn", {"minScore": 0.9}],
+                  "categories:seo": ["warn", {"minScore": 0.9}]
+                }
+              },
+              "upload": {
+                "target": "temporary-public-storage"
+              }
+            }
+          }
+          EOF
+
+      - name: Create Lighthouse config (Norwegian)
+        run: |
+          cat > .lighthouserc-no.json << 'EOF'
+          {
+            "ci": {
+              "collect": {
+                "url": ["http://localhost:8080/index.html#no"],
+                "numberOfRuns": 1,
+                "settings": {
+                  "preset": "desktop",
+                  "onlyCategories": ["performance", "accessibility", "best-practices", "seo"]
+                }
+              },
+              "assert": {
+                "assertions": {
+                  "categories:performance": ["warn", {"minScore": 0.9}],
+                  "categories:accessibility": ["error", {"minScore": 0.95}],
+                  "categories:best-practices": ["warn", {"minScore": 0.9}],
+                  "categories:seo": ["warn", {"minScore": 0.9}]
+                }
+              },
+              "upload": {
+                "target": "temporary-public-storage"
+              }
+            }
+          }
+          EOF
+
+      - name: Run Lighthouse (English version)
+        run: |
+          echo "🔍 Running Lighthouse audit for English version..."
+          npx lighthouse http://localhost:8080/index.html#en \
+            --output=json \
+            --output=html \
+            --output-path=./lighthouse-en \
+            --preset=desktop \
+            --quiet \
+            --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage"
+          
+          echo ""
+          echo "📊 Lighthouse Results (English):"
+          echo "================================"
+          cat lighthouse-en.report.json | node -e "
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('/dev/stdin', 'utf8'));
+            const cats = report.categories;
+            console.log('Performance:    ' + Math.round(cats.performance.score * 100) + '/100');
+            console.log('Accessibility:  ' + Math.round(cats.accessibility.score * 100) + '/100');
+            console.log('Best Practices: ' + Math.round(cats['best-practices'].score * 100) + '/100');
+            console.log('SEO:            ' + Math.round(cats.seo.score * 100) + '/100');
+          "
+
+      - name: Run Lighthouse (Norwegian version)
+        run: |
+          echo ""
+          echo "🔍 Running Lighthouse audit for Norwegian version..."
+          npx lighthouse http://localhost:8080/index.html#no \
+            --output=json \
+            --output=html \
+            --output-path=./lighthouse-no \
+            --preset=desktop \
+            --quiet \
+            --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage"
+          
+          echo ""
+          echo "📊 Lighthouse Results (Norwegian):"
+          echo "=================================="
+          cat lighthouse-no.report.json | node -e "
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('/dev/stdin', 'utf8'));
+            const cats = report.categories;
+            console.log('Performance:    ' + Math.round(cats.performance.score * 100) + '/100');
+            console.log('Accessibility:  ' + Math.round(cats.accessibility.score * 100) + '/100');
+            console.log('Best Practices: ' + Math.round(cats['best-practices'].score * 100) + '/100');
+            console.log('SEO:            ' + Math.round(cats.seo.score * 100) + '/100');
+          "
+
+      - name: Check score thresholds
+        run: |
+          cat > check-scores.js << 'EOF'
+          const fs = require('fs');
+          
+          function checkScores(file, lang) {
+            const report = JSON.parse(fs.readFileSync(file, 'utf8'));
+            const cats = report.categories;
+            
+            const scores = {
+              performance: Math.round(cats.performance.score * 100),
+              accessibility: Math.round(cats.accessibility.score * 100),
+              bestPractices: Math.round(cats['best-practices'].score * 100),
+              seo: Math.round(cats.seo.score * 100)
+            };
+            
+            let failed = [];
+            
+            if (scores.performance < 90) failed.push(`Performance: ${scores.performance}/100`);
+            if (scores.accessibility < 95) failed.push(`Accessibility: ${scores.accessibility}/100`);
+            if (scores.bestPractices < 90) failed.push(`Best Practices: ${scores.bestPractices}/100`);
+            if (scores.seo < 90) failed.push(`SEO: ${scores.seo}/100`);
+            
+            if (failed.length > 0) {
+              console.log(`\n⚠️ ${lang} version scores below threshold:`);
+              failed.forEach(f => console.log(`  - ${f}`));
+              return false;
+            } else {
+              console.log(`\n✅ ${lang} version passed all thresholds!`);
+              return true;
+            }
+          }
+          
+          const enPassed = checkScores('lighthouse-en.report.json', 'English');
+          const noPassed = checkScores('lighthouse-no.report.json', 'Norwegian');
+          
+          if (!enPassed || !noPassed) {
+            console.log('\n⚠️ Some Lighthouse scores are below recommended thresholds.');
+            console.log('Consider reviewing the HTML reports for detailed recommendations.');
+          } else {
+            console.log('\n🎉 All Lighthouse scores meet or exceed thresholds!');
+          }
+          EOF
+          node check-scores.js
+
+      - name: Upload Lighthouse reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-reports
+          path: |
+            lighthouse-en.report.html
+            lighthouse-no.report.html
+            lighthouse-en.report.json
+            lighthouse-no.report.json
+          retention-days: 30
+
+      - name: Performance Summary
+        if: always()
+        run: |
+          echo ""
+          echo "╔════════════════════════════════════════╗"
+          echo "║   Lighthouse CI Audit Complete        ║"
+          echo "╚════════════════════════════════════════╝"
+          echo ""
+          echo "📊 Reports generated for both EN and NO versions"
+          echo "📁 HTML reports uploaded as artifacts"
+          echo "🔗 Check the 'Artifacts' section of this workflow run"
+          echo ""

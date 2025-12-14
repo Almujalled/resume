@@ -15,7 +15,7 @@ body {
 
 /* Container */
 .container {
-    max-width: 900px;
+    max-width: 950px;
     margin: 0 auto;
     background-color: #fff;
     padding: 40px;
@@ -23,8 +23,39 @@ body {
     border-radius: 8px;
 }
 
+/* Language Toggle */
+.lang-toggle {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 0.9em;
+    user-select: none;
+}
+
+.lang-toggle span {
+    cursor: pointer;
+    color: #95a5a6;
+    transition: color 0.3s;
+    padding: 2px 6px;
+}
+
+.lang-toggle span:hover {
+    color: #2c3e50;
+}
+
+.lang-toggle span.active {
+    color: #3498db;
+    font-weight: 600;
+}
+
+/* Language content - hide inactive by default */
+.no {
+    display: none;
+}
+
 /* Header */
 header {
+    position: relative;
     text-align: center;
     padding-bottom: 30px;
     border-bottom: 3px solid #2c3e50;
@@ -61,7 +92,7 @@ header h1 {
 
 /* Sections */
 section {
-    margin-bottom: 35px;
+    margin-bottom: 28px;
 }
 
 section h2 {
@@ -69,7 +100,9 @@ section h2 {
     color: #2c3e50;
     margin-bottom: 20px;
     padding-bottom: 10px;
+    padding-left: 12px;
     border-bottom: 2px solid #ecf0f1;
+    border-left: 4px solid #3498db;
 }
 
 /* Summary */
@@ -81,7 +114,7 @@ section h2 {
 
 /* Experience */
 .job, .degree, .project {
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
 .job h3, .degree h3, .project h3 {
@@ -118,6 +151,27 @@ section h2 {
     color: #555;
 }
 
+/* Honors */
+.honor {
+    margin-bottom: 25px;
+}
+
+.honor h3 {
+    font-size: 1.3em;
+    color: #34495e;
+    margin-bottom: 8px;
+}
+
+.organization {
+    font-size: 1.05em;
+    color: #7f8c8d;
+    margin-bottom: 5px;
+}
+
+.honor p {
+    color: #555;
+}
+
 /* Skills */
 .skills-grid {
     display: grid;
@@ -127,8 +181,9 @@ section h2 {
 
 .skill-category {
     padding: 15px;
-    background-color: #ecf0f1;
-    border-radius: 5px;
+    background-color: #f8f9fa;
+    border-left: 3px solid #3498db;
+    border-radius: 4px;
 }
 
 .skill-category h3 {
@@ -165,6 +220,12 @@ footer {
 }
 
 /* Responsive Design */
+@media (min-width: 1200px) {
+    .skills-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 768px) {
     .container {
         padding: 20px;
@@ -192,6 +253,18 @@ footer {
     .container {
         box-shadow: none;
         padding: 0;
+    }
+
+    .lang-toggle {
+        display: none;
+    }
+
+    .no {
+        display: none !important;
+    }
+
+    .en {
+        display: inline !important;
     }
 
     a {

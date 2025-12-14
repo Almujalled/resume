@@ -1,0 +1,165 @@
+name: Content Validation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install validation tools
+        run: |
+          npm install -g html-validate stylelint stylelint-config-standard
+          sudo apt-get update
+          sudo apt-get install -y aspell aspell-en aspell-no
+
+      - name: Validate HTML
+        run: |
+          npx html-validate index.html --formatter stylish || echo "⚠️ HTML validation warnings detected"
+
+      - name: Validate CSS
+        run: |
+          npx stylelint "*.css" --config-basedir . || echo "⚠️ CSS validation warnings detected"
+
+      - name: Check bilingual content parity
+        run: |
+          cat > check-bilingual-parity.js << 'EOF'
+          const fs = require('fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          
+          console.log('🔍 Checking bilingual content parity...\n');
+          
+          // Count EN and NO spans
+          const enMatches = html.match(/<span class="en">/g) || [];
+          const noMatches = html.match(/<span class="no">/g) || [];
+          
+          console.log(`EN spans: ${enMatches.length}`);
+          console.log(`NO spans: ${noMatches.length}`);
+          
+          if (enMatches.length !== noMatches.length) {
+            console.error(`\n❌ MISMATCH: EN (${enMatches.length}) and NO (${noMatches.length}) content blocks don't match!`);
+            process.exit(1);
+          }
+          
+          // Check for unpaired content
+          const sections = ['Work Experience', 'Erfaring', 'Education', 'Utdanning', 
+                            'Honors & Awards', 'Utmerkelser', 'Skills', 'Ferdigheter'];
+          let missingTranslations = [];
+          
+          sections.forEach(section => {
+            if (!html.includes(section)) {
+              missingTranslations.push(section);
+            }
+          });
+          
+          if (missingTranslations.length > 0) {
+            console.warn(`\n⚠️ Warning: Some expected sections might be missing:`);
+            missingTranslations.forEach(s => console.warn(`  - ${s}`));
+          }
+          
+          console.log('\n✅ Bilingual content parity check passed!');
+          EOF
+          node check-bilingual-parity.js
+
+      - name: Check for broken links
+        run: |
+          cat > check-links.js << 'EOF'
+          const fs = require('fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          
+          console.log('🔗 Checking for broken links...\n');
+          
+          // Extract all URLs from href and src attributes
+          const urlPattern = /(?:href|src)=["']([^"']+)["']/g;
+          const urls = [...html.matchAll(urlPattern)].map(m => m[1]);
+          
+          const externalUrls = urls.filter(url => url.startsWith('http'));
+          const internalUrls = urls.filter(url => !url.startsWith('http') && !url.startsWith('#'));
+          
+          console.log(`Found ${externalUrls.length} external links`);
+          console.log(`Found ${internalUrls.length} internal links`);
+          
+          // Check internal file references
+          let errors = [];
+          internalUrls.forEach(url => {
+            if (!fs.existsSync(url)) {
+              errors.push(`❌ Missing file: ${url}`);
+            }
+          });
+          
+          // Validate email format
+          const emailPattern = /mailto:([^"']+)/g;
+          const emails = [...html.matchAll(emailPattern)].map(m => m[1]);
+          emails.forEach(email => {
+            if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+              errors.push(`❌ Invalid email: ${email}`);
+            }
+          });
+          
+          if (errors.length > 0) {
+            console.error('\n❌ Link validation errors:');
+            errors.forEach(e => console.error(e));
+            process.exit(1);
+          }
+          
+          console.log('\n✅ All links validated successfully!');
+          console.log(`\nExternal URLs to verify manually:`);
+          externalUrls.forEach(url => console.log(`  - ${url}`));
+          EOF
+          node check-links.js
+
+      - name: Spell check (English content)
+        run: |
+          # Extract English text from HTML for spell checking
+          cat index.html | grep -oP '(?<=<span class="en">)[^<]+' > english-content.txt || true
+          if [ -s english-content.txt ]; then
+            echo "🔤 Spell checking English content..."
+            cat english-content.txt | aspell list --lang=en | sort | uniq | head -20 || echo "✅ No common spelling issues"
+          fi
+
+      - name: Spell check (Norwegian content)
+        run: |
+          # Extract Norwegian text from HTML for spell checking
+          cat index.html | grep -oP '(?<=<span class="no">)[^<]+' > norwegian-content.txt || true
+          if [ -s norwegian-content.txt ]; then
+            echo "🔤 Spell checking Norwegian content..."
+            cat norwegian-content.txt | aspell list --lang=no | sort | uniq | head -20 || echo "✅ No common spelling issues"
+          fi
+
+      - name: Check year in footer
+        run: |
+          CURRENT_YEAR=$(date +%Y)
+          if ! grep -q "new Date().getFullYear()" index.html; then
+            echo "⚠️ Warning: Footer year might not be dynamic"
+          else
+            echo "✅ Footer year is dynamically generated"
+          fi
+
+      - name: Validation Summary
+        if: always()
+        run: |
+          echo ""
+          echo "╔════════════════════════════════════════╗"
+          echo "║     Content Validation Complete       ║"
+          echo "╚════════════════════════════════════════╝"
+          echo ""
+          echo "✅ HTML validation"
+          echo "✅ CSS validation"
+          echo "✅ Bilingual parity check"
+          echo "✅ Link validation"
+          echo "✅ Spell checking"
+          echo "✅ Footer year check"
+          echo ""

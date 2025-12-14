@@ -1,0 +1,146 @@
+name: Generate PDF Resume
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'index.html'
+      - 'style.css'
+  workflow_dispatch:
+
+jobs:
+  generate-pdf:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Puppeteer
+        run: |
+          npm install puppeteer
+
+      - name: Create PDF generation script
+        run: |
+          cat > generate-pdf.js << 'EOF'
+          const puppeteer = require('puppeteer');
+          const fs = require('fs');
+
+          (async () => {
+            const browser = await puppeteer.launch({
+              headless: 'new',
+              args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+            
+            const page = await browser.newPage();
+            
+            // Generate English version
+            await page.goto('file://' + process.cwd() + '/index.html', {
+              waitUntil: 'networkidle0'
+            });
+            await page.evaluate(() => {
+              localStorage.setItem('resumeLang', 'en');
+              const enBtn = document.querySelector('[data-lang="en"]');
+              enBtn.click();
+            });
+            await page.waitForTimeout(500);
+            await page.pdf({
+              path: 'Ghaith_Almujalled_Resume_EN.pdf',
+              format: 'A4',
+              printBackground: true,
+              margin: {
+                top: '20mm',
+                right: '15mm',
+                bottom: '20mm',
+                left: '15mm'
+              }
+            });
+            console.log('✅ English PDF generated');
+            
+            // Generate Norwegian version
+            await page.goto('file://' + process.cwd() + '/index.html', {
+              waitUntil: 'networkidle0'
+            });
+            await page.evaluate(() => {
+              localStorage.setItem('resumeLang', 'no');
+              const noBtn = document.querySelector('[data-lang="no"]');
+              noBtn.click();
+            });
+            await page.waitForTimeout(500);
+            await page.pdf({
+              path: 'Ghaith_Almujalled_Resume_NO.pdf',
+              format: 'A4',
+              printBackground: true,
+              margin: {
+                top: '20mm',
+                right: '15mm',
+                bottom: '20mm',
+                left: '15mm'
+              }
+            });
+            console.log('✅ Norwegian PDF generated');
+            
+            await browser.close();
+          })();
+          EOF
+
+      - name: Generate PDF resumes
+        run: node generate-pdf.js
+
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: resume-${{ steps.date.outputs.date }}-${{ github.run_number }}
+          release_name: Resume - ${{ steps.date.outputs.date }}
+          body: |
+            📄 Auto-generated PDF resumes
+            
+            **Languages:**
+            - English (EN)
+            - Norwegian (NO)
+            
+            **Generated:** ${{ steps.date.outputs.date }}
+            **Commit:** ${{ github.sha }}
+          draft: false
+          prerelease: false
+
+      - name: Upload English PDF
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./Ghaith_Almujalled_Resume_EN.pdf
+          asset_name: Ghaith_Almujalled_Resume_EN.pdf
+          asset_content_type: application/pdf
+
+      - name: Upload Norwegian PDF
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./Ghaith_Almujalled_Resume_NO.pdf
+          asset_name: Ghaith_Almujalled_Resume_NO.pdf
+          asset_content_type: application/pdf
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: resume-pdfs
+          path: |
+            Ghaith_Almujalled_Resume_EN.pdf
+            Ghaith_Almujalled_Resume_NO.pdf
+          retention-days: 90
