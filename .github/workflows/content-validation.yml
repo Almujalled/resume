@@ -87,10 +87,10 @@ jobs:
           const urls = [...html.matchAll(urlPattern)].map(m => m[1]);
           
           const externalUrls = urls.filter(url => url.startsWith('http'));
-          const internalUrls = urls.filter(url => !url.startsWith('http') && !url.startsWith('#'));
+          const internalUrls = urls.filter(url => !url.startsWith('http') && !url.startsWith('#') && !url.startsWith('mailto:'));
           
           console.log(`Found ${externalUrls.length} external links`);
-          console.log(`Found ${internalUrls.length} internal links`);
+          console.log(`Found ${internalUrls.length} internal file links`);
           
           // Check internal file references
           let errors = [];
@@ -103,6 +103,7 @@ jobs:
           // Validate email format
           const emailPattern = /mailto:([^"']+)/g;
           const emails = [...html.matchAll(emailPattern)].map(m => m[1]);
+          console.log(`Found ${emails.length} email links`);
           emails.forEach(email => {
             if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
               errors.push(`❌ Invalid email: ${email}`);
