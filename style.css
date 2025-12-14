@@ -160,12 +160,14 @@ header h1 {
 .contact-info a {
     color: var(--accent-color);
     text-decoration: none;
-    transition: color 0.3s;
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.4s ease, color 0.3s;
+    position: relative;
 }
 
 .contact-info a:hover {
     color: var(--accent-dark);
-    text-decoration: underline;
+    border-bottom: 2px solid var(--accent-dark);
 }
 
 /* PDF Download Buttons */
@@ -190,8 +192,9 @@ header h1 {
 
 .pdf-btn:hover {
     background-color: var(--accent-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px var(--shadow-color);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px var(--shadow-color),
+                0 0 30px rgba(47, 191, 113, 0.3);
 }
 
 /* Sections */
@@ -554,12 +557,13 @@ section h2 {
 .project a {
     color: var(--accent-color);
     text-decoration: none;
-    transition: color 0.3s;
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.4s ease, color 0.3s;
 }
 
 .project a:hover {
     color: var(--accent-dark);
-    text-decoration: underline;
+    border-bottom: 2px solid var(--accent-dark);
 }
 
 /* Footer */
