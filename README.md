@@ -39,9 +39,10 @@ open index.html  # or python3 -m http.server 8080
 |-------|-----------|
 | **Frontend** | Vanilla HTML5 + CSS3 + ES6 JavaScript |
 | **Design** | Mobile-first responsive, print-optimized |
+| **PDF Source** | LaTeX (XeLaTeX compiler) - Awesome-CV template |
 | **Deployment** | GitHub Pages (auto-deploy from `main`) |
 | **CI/CD** | 3 GitHub Actions workflows |
-| **PDF Engine** | Puppeteer headless Chrome |
+| **PDF Engine** | XeLaTeX compilation (professional typography) |
 | **Validation** | html-validate, stylelint, aspell |
 | **Monitoring** | Lighthouse CI (Performance/A11y/SEO) |
 
@@ -49,10 +50,12 @@ open index.html  # or python3 -m http.server 8080
 
 Every push to `main` triggers:
 
-### 📄 **PDF Generation**
-- Puppeteer renders bilingual PDFs (A4, 20mm/15mm margins)
+### 📄 **PDF Generation (LaTeX)**
+- XeLaTeX compiles professional PDFs from `latex-src/` and `latex-src-no/`
+- Awesome-CV template with custom fonts and styling
 - Creates tagged GitHub Release: `resume-YYYY-MM-DD-<run>`
 - 90-day artifact retention + permanent release storage
+- **Triggers**: Changes to `latex-src/**` or `latex-src-no/**`
 
 ### ✅ **Content Validation**
 - HTML/CSS syntax validation
@@ -75,13 +78,20 @@ Every push to `main` triggers:
 
 ```
 resume/
-├── index.html           # Bilingual single-page app
+├── index.html           # Bilingual single-page web app
 ├── style.css            # Responsive design system
+├── latex-src/           # English LaTeX source (Awesome-CV)
+│   ├── resume_cv.tex    # Main LaTeX file
+│   ├── cv-sections/     # Modular CV sections
+│   ├── fonts/           # Custom fonts
+│   └── awesome-cv.cls   # Template class
+├── latex-src-no/        # Norwegian LaTeX source
+│   └── (same structure)
 ├── .github/
 │   ├── copilot-instructions.md   # AI agent guidance
 │   └── workflows/
-│       ├── pdf-generation.yml    # Puppeteer PDF automation
-│       ├── content-validation.yml # Quality checks
+│       ├── pdf-generation.yml    # XeLaTeX PDF compilation
+│       ├── content-validation.yml # HTML/CSS quality checks
 │       ├── lighthouse-ci.yml      # Performance monitoring
 │       └── README.md              # Workflow documentation
 └── README.md            # You are here 👈

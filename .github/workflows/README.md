@@ -5,17 +5,17 @@ This resume repository uses three automated workflows to maintain quality and ge
 ## 🤖 Workflows
 
 ### 1. PDF Generation (`pdf-generation.yml`)
-**Automatically generates downloadable PDF resumes on every push**
+**Automatically compiles professional LaTeX PDFs on every push**
 
-- **When**: Triggered on push to `main` when `index.html` or `style.css` changes
+- **When**: Triggered on push to `main` when `latex-src/` or `latex-src-no/` changes
 - **What it does**:
-  - Generates `resume-en.pdf` (English version)
-  - Generates `resume-no.pdf` (Norwegian version)
+  - Compiles `latex-src/resume_cv.tex` with XeLaTeX → `Ghaith_Almujalled_Resume_EN.pdf`
+  - Compiles `latex-src-no/resume_cv.tex` with XeLaTeX → `Ghaith_Almujalled_Resume_NO.pdf`
   - Creates GitHub Release: `resume-YYYY-MM-DD-<run_number>`
   - Uploads both PDFs to the release
   - Stores PDFs as workflow artifacts (90-day retention)
-- **Technology**: Puppeteer with headless Chrome
-- **PDF Format**: A4, print backgrounds, 20mm/15mm margins
+- **Technology**: XeLaTeX compiler with Awesome-CV template
+- **Template**: Awesome-CV (CC BY-NC-SA 3.0) with custom fonts
 
 **Access PDFs**: Go to [Releases](../../releases) to download the latest versions
 
@@ -93,21 +93,19 @@ All three workflows support manual triggering:
 
 ### Test PDF Generation Locally
 ```bash
-# Install dependencies
-npm install -g puppeteer
+# Install XeLaTeX (macOS)
+brew install --cask mactex-no-gui
 
-# Run the PDF generation script
-node -e "
-const puppeteer = require('puppeteer');
-(async () => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-  await page.goto('file://' + process.cwd() + '/index.html#en', { waitUntil: 'networkidle0' });
-  await page.pdf({ path: 'resume-en.pdf', format: 'A4', printBackground: true });
-  console.log('✅ PDF generated: resume-en.pdf');
-  await browser.close();
-})();
-"
+# Or use Docker
+docker run --rm -v "$PWD/latex-src:/workspace" -w /workspace texlive/texlive xelatex resume_cv.tex
+
+# Compile English version
+cd latex-src
+xelatex resume_cv.tex
+
+# Compile Norwegian version
+cd latex-src-no
+xelatex resume_cv.tex
 ```
 
 ### Test Content Validation Locally

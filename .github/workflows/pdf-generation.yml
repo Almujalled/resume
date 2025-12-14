@@ -1,103 +1,42 @@
 name: Generate PDF Resume
 
+# Manual workflow only - LaTeX source kept private
+# Build PDFs locally with: cd latex-src && xelatex resume_cv.tex
+# Then manually create release and upload PDFs
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'index.html'
-      - 'style.css'
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 2025-12-14)'
+        required: true
+        default: '2025-12-14'
 
 permissions:
   contents: write
 
 jobs:
-  generate-pdf:
+  create-release:
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install Puppeteer
+      - name: Check for PDFs
         run: |
-          npm install puppeteer
-
-      - name: Create PDF generation script
-        run: |
-          cat > generate-pdf.js << 'EOF'
-          const puppeteer = require('puppeteer');
-          const fs = require('fs');
-
-          (async () => {
-            const browser = await puppeteer.launch({
-              headless: 'new',
-              args: ['--no-sandbox', '--disable-setuid-sandbox']
-            });
-            
-            const page = await browser.newPage();
-            
-            // Generate English version
-            await page.goto('file://' + process.cwd() + '/index.html', {
-              waitUntil: 'networkidle0'
-            });
-            await page.evaluate(() => {
-              localStorage.setItem('resumeLang', 'en');
-              const enBtn = document.querySelector('[data-lang="en"]');
-              enBtn.click();
-            });
-            await new Promise(resolve => setTimeout(resolve, 500));
-            await page.pdf({
-              path: 'Ghaith_Almujalled_Resume_EN.pdf',
-              format: 'A4',
-              printBackground: true,
-              margin: {
-                top: '20mm',
-                right: '15mm',
-                bottom: '20mm',
-                left: '15mm'
-              }
-            });
-            console.log('✅ English PDF generated');
-            
-            // Generate Norwegian version
-            await page.goto('file://' + process.cwd() + '/index.html', {
-              waitUntil: 'networkidle0'
-            });
-            await page.evaluate(() => {
-              localStorage.setItem('resumeLang', 'no');
-              const noBtn = document.querySelector('[data-lang="no"]');
-              noBtn.click();
-            });
-            await new Promise(resolve => setTimeout(resolve, 500));
-            await page.pdf({
-              path: 'Ghaith_Almujalled_Resume_NO.pdf',
-              format: 'A4',
-              printBackground: true,
-              margin: {
-                top: '20mm',
-                right: '15mm',
-                bottom: '20mm',
-                left: '15mm'
-              }
-            });
-            console.log('✅ Norwegian PDF generated');
-            
-            await browser.close();
-          })();
-          EOF
-
-      - name: Generate PDF resumes
-        run: node generate-pdf.js
-
-      - name: Get current date
-        id: date
-        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+          if [ ! -f "Ghaith_Almujalled_Resume_EN.pdf" ] || [ ! -f "Ghaith_Almujalled_Resume_NO.pdf" ]; then
+            echo "❌ PDF files not found!"
+            echo "Please build PDFs locally and commit them before running this workflow."
+            echo ""
+            echo "Build commands:"
+            echo "  cd latex-src && xelatex resume_cv.tex"
+            echo "  cd latex-src-no && xelatex resume_cv.tex"
+            echo ""
+            echo "Then copy PDFs to repo root:"
+            echo "  cp latex-src/resume_cv.pdf Ghaith_Almujalled_Resume_EN.pdf"
+            echo "  cp latex-src-no/resume_cv.pdf Ghaith_Almujalled_Resume_NO.pdf"
+            exit 1
+          fi
 
       - name: Create Release
         id: create_release
@@ -105,17 +44,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: resume-${{ steps.date.outputs.date }}-${{ github.run_number }}
-          release_name: Resume - ${{ steps.date.outputs.date }}
+          tag_name: resume-${{ github.event.inputs.version }}-${{ github.run_number }}
+          release_name: Resume - ${{ github.event.inputs.version }}
           body: |
-            📄 Auto-generated PDF resumes
+            📄 Professional PDF resumes (LaTeX compiled)
             
             **Languages:**
-            - English (EN)
-            - Norwegian (NO)
+            - English (EN) - Professional LaTeX typesetting
+            - Norwegian (NO) - Professional LaTeX typesetting
             
-            **Generated:** ${{ steps.date.outputs.date }}
+            **Version:** ${{ github.event.inputs.version }}
             **Commit:** ${{ github.sha }}
+            
+            *Note: LaTeX source kept private for intellectual property protection*
           draft: false
           prerelease: false
 

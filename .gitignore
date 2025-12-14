@@ -48,8 +48,10 @@ yarn.lock
 *.bak
 *.backup
 
-# Source CV files (LaTeX, templates, etc.)
+# Source CV files (LaTeX, templates, etc.) - PRIVATE
 source-cv/
+latex-src/
+latex-src-no/
 
 # Analysis and research documents (internal use only)
 *enrichment*.md

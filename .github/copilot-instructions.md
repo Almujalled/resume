@@ -1,12 +1,15 @@
 # Resume Website - AI Coding Agent Instructions
 
 ## Project Overview
-Static HTML/CSS resume website hosted on GitHub Pages at `almujalled.github.io/resume/`. Single-page application with no build process or JavaScript framework dependencies.
+**Hybrid bilingual resume system**: Static HTML/CSS website on GitHub Pages + LaTeX-compiled professional PDFs. Single-page web application with no build process, combined with professional LaTeX typesetting for downloadable CVs.
 
 ## Architecture
-- **Entry Point**: [index.html](../index.html) - Single-page resume with semantic HTML5 sections
-- **Styling**: [style.css](../style.css) - Standalone CSS with mobile-first responsive design
+- **Web Entry Point**: [index.html](../index.html) - Single-page resume with semantic HTML5 sections
+- **Web Styling**: [style.css](../style.css) - Standalone CSS with mobile-first responsive design
+- **PDF Source (English)**: `latex-src/resume_cv.tex` - Awesome-CV LaTeX template
+- **PDF Source (Norwegian)**: `latex-src-no/resume_cv.tex` - Awesome-CV LaTeX template
 - **Deployment**: GitHub Pages auto-deploys from main branch root directory
+- **PDF Generation**: XeLaTeX compilation via GitHub Actions
 
 ## Key Design Patterns
 
@@ -76,15 +79,16 @@ python3 -m http.server 8000
 ## GitHub Actions CI/CD Workflows
 
 ### PDF Generation (`.github/workflows/pdf-generation.yml`)
-**Purpose**: Auto-generate downloadable PDF versions on every push to main
-- **Triggers**: Push to main (when index.html/style.css changes), manual dispatch
+**Purpose**: Compile professional PDFs from LaTeX source on every push
+- **Triggers**: Push to main (when latex-src/ or latex-src-no/ changes), manual dispatch
 - **Outputs**: 
-  - English PDF: `resume-en.pdf`
-  - Norwegian PDF: `resume-no.pdf`
+  - English PDF: `Ghaith_Almujalled_Resume_EN.pdf` (compiled from `latex-src/`)
+  - Norwegian PDF: `Ghaith_Almujalled_Resume_NO.pdf` (compiled from `latex-src-no/`)
   - GitHub Release: `resume-YYYY-MM-DD-<run_number>` with both PDFs attached
   - Workflow artifacts: 90-day retention
-- **Technology**: Puppeteer with inline JavaScript for language toggle automation
-- **PDF Settings**: A4 format, print backgrounds enabled, 20mm top/bottom, 15mm left/right margins
+- **Technology**: XeLaTeX compiler with Awesome-CV template
+- **LaTeX Template**: Awesome-CV (CC BY-NC-SA 3.0)
+- **Fonts**: Custom fonts in `latex-src/fonts/` and `latex-src-no/fonts/`
 
 ### Content Validation (`.github/workflows/content-validation.yml`)
 **Purpose**: Ensure code quality and bilingual content integrity
