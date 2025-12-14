@@ -48,7 +48,7 @@ jobs:
               const enBtn = document.querySelector('[data-lang="en"]');
               enBtn.click();
             });
-            await page.waitForTimeout(500);
+            await new Promise(resolve => setTimeout(resolve, 500));
             await page.pdf({
               path: 'Ghaith_Almujalled_Resume_EN.pdf',
               format: 'A4',
@@ -71,7 +71,7 @@ jobs:
               const noBtn = document.querySelector('[data-lang="no"]');
               noBtn.click();
             });
-            await page.waitForTimeout(500);
+            await new Promise(resolve => setTimeout(resolve, 500));
             await page.pdf({
               path: 'Ghaith_Almujalled_Resume_NO.pdf',
               format: 'A4',
