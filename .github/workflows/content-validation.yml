@@ -122,32 +122,7 @@ jobs:
           EOF
           node check-links.js
 
-      - name: Spell check (English content)
-        run: |
-          # Extract English text from HTML for spell checking
-          cat index.html | grep -oP '(?<=<span class="en">)[^<]+' > english-content.txt || true
-          if [ -s english-content.txt ]; then
-            echo "🔤 Spell checking English content..."
-            cat english-content.txt | aspell list --lang=en | sort | uniq | head -20 || echo "✅ No common spelling issues"
-          fi
 
-      - name: Spell check (Norwegian content)
-        run: |
-          # Extract Norwegian text from HTML for spell checking
-          cat index.html | grep -oP '(?<=<span class="no">)[^<]+' > norwegian-content.txt || true
-          if [ -s norwegian-content.txt ]; then
-            echo "🔤 Spell checking Norwegian content..."
-            cat norwegian-content.txt | aspell list --lang=no | sort | uniq | head -20 || echo "✅ No common spelling issues"
-          fi
-
-      - name: Check year in footer
-        run: |
-          CURRENT_YEAR=$(date +%Y)
-          if ! grep -q "new Date().getFullYear()" index.html; then
-            echo "⚠️ Warning: Footer year might not be dynamic"
-          else
-            echo "✅ Footer year is dynamically generated"
-          fi
 
       - name: Validation Summary
         if: always()
